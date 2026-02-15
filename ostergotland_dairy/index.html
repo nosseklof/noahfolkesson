@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="UTF-8">
+    <title>Ostergotland_DairyFarms&amp;Cows_Current</title>
+    <link rel="stylesheet" href="./style.css">
+
+  </head>
+    
+  <body>
+  <html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Dairy Farming Map</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- Mapbox JS API -->
+  <script src="https://api.mapbox.com/mapbox-gl-js/v3.18.1/mapbox-gl.js"></script>
+  <!-- Papa Parse -->
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <!-- Turf -->
+  <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
+  <!-- Mapbox CSS -->
+  <link href="https://api.mapbox.com/mapbox-gl-js/v3.18.1/mapbox-gl.css" rel="stylesheet">
+  
+  <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.1.0/mapbox-gl-geocoder.min.js"></script>
+  
+  <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.1.0/mapbox-gl-geocoder.css" type="text/css" />
+</head>
+
+<body>
+  <div id="mapMessage" class="map-message"></div>
+  <div id="map"></div>
+
+  <!-- LEFT CONSOLE -->
+  <div id="console_left" class="console">
+    
+    <div class="console-header">
+      <span class="console-title" id="console-title-left">Cream of the Crop:</span>
+      <button class="console-toggle left-toggle">
+        <span class="arrow">↖</span>
+      </button>
+    </div>
+    
+    <div class="console-content">
+      <h3>Changes in Dairy Production<br>in Östergötland, Sweden</h3>
+      
+      <!-- LEFT ACCORDION -->
+      <div class="accordion">
+        
+        <!-- COUNTY OVERVIEW ACCORDION ITEM-->
+        <div class="accordion-item">
+          <div class="accordion-header" data-target="allSummaryContent"> An Agricultural Heartland
+            <span class="accordion-arrow">▼</span>
+          </div>
+          
+          <div class="accordion-content" id="allSummaryContent">
+            <p id="allSummaryText">
+              Östergötland’s rich farmland and large open plains toward the lake Vattern has made it a <a href=https://jordbruketisiffror.wordpress.com/2015/10/06/basfakta-jordbruket-i-ostergotlands-lan>key region </a> for crop and grain production in Sweden. Small-scale mixed farms were long characteristic of the region, with dairy cows a common feature especially in the eastern forested and coastal municipalities. Technical and policy developments in the later 1900s favouring large scale production have meant that many small dairy farms have disappeared, leaving a landscape with fewer farms and much larger herds. While milk output has remained high, the everyday picture of farming and rural communities now look very different. <b>Select a municipality to see how this shift continued locally in the 2000s.</b>
+            </p>
+            <!-- MINI-CHART -->
+            <div id="mini-chart-county"></div>
+            <!-- MINI-CHART LEGEND -->
+            <div class="legend">
+              <span class="swatch cows"></span> Cows
+              <span class="swatch farms"></span> Farms
+            </div>
+          </div> <!-- END OF CONTENT -->
+        </div> <!-- END OF ITEM -->
+        
+        <!-- LEGEND AND DISPLAY OPTIONS ACCORDION ITEM -->
+        <div class="accordion-item">
+          <div class="accordion-header" data-target="legendOptionsContent"> Legend and Display Options
+            <span class="accordion-arrow">▼</span>
+          </div>
+          
+          <div class="accordion-content" id="legendOptionsContent">
+            <!-- LEGEND CONTENT -->
+            <div id="mapLegend" class="map-legend-box">
+              <div class="legend-title">Legend
+              </div>
+              
+              <!-- Municipality boundaries -->
+              <div class="legend-row simple">
+                <span class="legend-swatch boundary"></span>
+                <span class="legend-text">Municipality boundary
+                </span>
+              </div>
+              
+              <!-- Average cow circles -->
+              <div class="legend-row legend-circles">
+                
+                <span class="legend-text">Average number of dairy cows per farm:</span>
+                
+                <div class="circle-scale"> <!-- container holding circles -->
+                  
+                  <div class="circle-item">
+                    <span class="circle c50"></span>
+                    <span class="circle-number">50</span>
+                  </div>
+                  
+                  <div class="circle-item">
+                    <span class="circle c100"></span>
+                    <span class="circle-number">100</span>
+                  </div>
+                  
+                  <div class="circle-item">
+                    <span class="circle c150"></span>
+                    <span class="circle-number">150</span>
+                  </div>
+                  
+                  <div class="circle-item">
+                    <span class="circle c200"></span>
+                    <span class="circle-number">200</span>
+                  </div>
+                  
+                </div>
+              
+              </div>
+              
+              <!-- Density Legend -->
+              <div id="density-legend" class="legend-density-block">
+                <div class="density-title"></div>
+                
+                <div class="density-bar-container">
+                  <div id="density-boxes" class="density-boxes"></div>
+                  <div id="density-boundaries" class="density-boundaries"></div>
+                </div>
+                
+              </div>
+              
+            </div> <!-- END OF LEGEND -->
+            
+            <!-- DISPLAY OPTIONS CONTENT -->
+            <div id="mapLegend" class="map-legend-box">
+              <div class="legend-title">Display Options</div>
+              <!-- Farm/Cow radio buttons  -->
+              <div id="density-mode-container">
+                <div id="density-toggle" class="toggle-container">
+                  
+                  <label class="density-mode-box"> <!-- Farm button -->
+                    <input type="radio" name="densityMode" value="farms" checked>
+                    <div class="density-mode-text">
+                      <span>Farms</span>
+                    </div>
+                  </label>
+                  
+                  <label class="density-mode-box"> <!-- Cow button -->
+                    <input type="radio" name="densityMode" value="cows">
+                    <div class="density-mode-text">
+                      <span>Cows</span>
+                    </div>
+                  </label>
+                
+                </div>
+              </div> <!-- END OF Farm/Cow radio buttons  -->
+              
+              <!-- Year slider -->
+              <div id="yearSliderContainer">
+                <input id="yearSlider" type="range">
+                <div id="yearTicks">
+                </div>
+              </div> <!-- END OF Year slider -->
+            
+            </div> <!-- END OF DISPLAY OPTIONS -->
+          
+        </div> <!-- END OF CONTENT -->
+      </div> <!-- END ACCORDION ITEM -->
+        
+        <!-- DATA SOURCES ACCORDION ITEM-->
+        <div class="accordion-item">
+          <div class="accordion-header" data-target="sourcesNotesContent">
+            Data Sources and Notes
+            <span class="accordion-arrow">▼</span>
+          </div>
+          
+          <div class="accordion-content" id="sourcesNotesContent">
+            
+            <p id="sourcesNotesContent">
+              <b>Created by:</b> Noah Folkesson, 17/02/2026.
+              <br>
+              <b>Last updated:</b> 17/02/2026.
+              <br>
+              <b>Agricultural data:</b>
+              <a href="https://statistik.sjv.se/PXWeb/pxweb/sv/Jordbruksverkets%20statistikdatabas/Jordbruksverkets%20statistikdatabas__Lantbrukets%20djur__Lantbruksdjur%20i%20juni/JO0103F05.px/?rxid=5adf4929-f548-4f27-9bc9-78e127837625">Jordbruksverket
+              </a> (accessed 25/01/2026), stored on
+              <a href="https://raw.githubusercontent.com/nosseklof/noahfolkesson/main/ostergotland_cow_data.csv">Github
+              </a>.
+              <br>
+              <b>Municipal boundaries data:</b>
+              <a href="https://www.scb.se/hitta-statistik/regional-statistik-och-kartor/regionala-indelningar/digitala-granser/">Statistikmyndigheten SCB
+              </a>
+              (accessed 25/01/2026).
+              <br>
+              <b>References:</b>
+            </p>
+            
+            <ul id="references">
+              
+              <li>Månsson, E. (1988) <em>50 år med östgötskt jordbruk</em> [50 years of agriculture in Östergötland]. Linköping: Östergötlands läns hushållningssällskap.
+              </li>
+              
+              <li>Eliasson, A. <em>et al.</em> (2018). <em>Att förvalta ett landskap: Fysisk planering och hushållning med jordbruksmark i Östergötland</em> [Managing a landscape: spatial planning and stewardship of agricultural land in Östergötland]. 2018:21. Linköping: Länsstyrelsen Östergötland.
+              </li>
+              
+              <li>Sveriges miljömål (n.d.) <em>Östergötlands län - Jordbrukets utveckling</em> [Östergötland county - The development of agriculture].
+                <a href="https://www.sverigesmiljomal.se/miljomalen/ett-rikt-odlingslandskap/jordbrukets-utveckling/ostergotlands-lan/">Available online
+                </a> (Accessed: 10/02/2026).
+              </li>
+              
+            </ul>
+            
+            <p>
+    Please note the map was created with use of Generative AI (Copilot) for demo code and troubleshooting.
+            </p>
+          
+          </div>
+          
+        </div> <!-- END DATA SOURCES ACCORDION ITEM -->
+        
+      </div> <!-- END LEFT ACCORDION -->
+    
+    </div> <!-- END LEFT CONTENT -->
+    
+  </div> <!-- END LEFT CONSOLE -->
+
+  <!-- RIGHT CONSOLE -->
+  <div id="console_right" class="console">
+    <div class="console-header">
+      <span class="console-title-right" id="infoTitle">Select a municipaity</span>
+      <button class="console-toggle right-toggle">
+        <span class="arrow">↗</span>
+      </button>
+    </div>
+    
+    <div class="console-content">
+      <!-- RIGHT ACCORDION -->
+      <div class="accordion">
+
+        <!-- MUNICIPAL SUMMARY -->
+        <div class="accordion-item">
+          <div class="accordion-header" data-target="summaryContent">
+            Summary
+            <span class="accordion-arrow">▼</span>
+          </div>
+          <div class="accordion-content" id="summaryContent">
+            <p id="summaryText"></p>
+          </div>
+        </div>
+
+        <!-- STATISTICS & TRENDS -->
+        <div class="accordion-item">
+          <div class="accordion-header" data-target="statsContent">
+            Data and Trends
+            <span class="accordion-arrow">▼</span>
+          </div>
+
+          <div class="accordion-content" id="statsContent">
+            <p>Selected year: <strong id="infoYear">—</strong></p>
+            <p>Number of dairy farms: <strong id="infoFarms">—</strong></p>
+            <p>Number of dairy cows: <strong id="infoCows">—</strong></p>
+            <p>Average number of dairy cows per farm: <strong id="infoAvg">—</strong></p>
+
+            <!-- MINI-CHART -->
+            <div id="mini-chart"></div>
+
+            <!-- MINI-CHART LEGEND -->
+            <div class="legend">
+              <span class="swatch cows"></span> Cows
+              <span class="swatch farms"></span> Farms
+            </div>
+          </div> <!-- END statsContent -->
+        </div> <!-- END Statistics & Trends item -->
+      </div> <!-- END ACCORDION -->
+      
+    </div><!-- END CONSOLE CONTENT -->
+
+  </div> <!-- END RIGHT CONSOLE -->
+
+</body>
+</html>
+    <script  src="./script.js"></script>
+
+  </body>
+  
+</html>
