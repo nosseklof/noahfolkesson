@@ -1,0 +1,768 @@
+/********************************************
+ * 0. Code Overview
+1. BASE PAGE LAYOUT
+2. TWO-CONSOLE LAYOUT (LEFT + RIGHT)
+3. YEAR SLIDER (LEFT CONSOLE)
+4. MAP LEGEND (LEFT CONSOLE)
+5. MINI-CHART (RIGHT CONSOLE)
+6. ACCORDION (RIGHT CONSOLE)
+7. HOVER POP-UP
+8. GEOCODER
+ ********************************************/
+
+/********************************************
+ * 1. BASE PAGE LAYOUT
+ ********************************************/
+
+body {
+  margin: 0;
+  padding: 0;
+}
+#map {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 100%;
+}
+
+/*Title in left hand console*/
+#console-title-left { 
+  font-size: 18px;
+  font-weight: 900;
+  line-height: 18px;
+  margin-bottom: 0px;
+  margin-left: 6px;
+  color: #00441b;
+  font-family: Roboto, sans-serif;
+}
+
+/*Subtitle in left hand console*/
+h3 {
+  font-size: 16px;
+  line-height: 18px;
+  margin-top: 4px;
+  margin-bottom: 10px;
+  font-weight: bold;
+  margin-left: 10px;
+  color: #006d2c;
+  font-family: Roboto, sans-serif
+}
+
+/*Header in right hand console*/
+#infoTitle {
+  font-size: 16px;
+  line-height: 16px;
+  margin-bottom: 10px;
+  font-weight: bold;
+}
+
+/*visible URL links*/
+a {
+  text-decoration: underline;
+  color: #00441b;
+}
+
+/*Regular text (both consoles and legends*/
+p { 
+  font-size: 12px;
+  line-height: 15px;
+  margin-top: 6px;
+  margin-bottom: 6px;
+  font-family: Roboto, sans-serif;
+}
+
+/*reference list*/
+ul { 
+  font-size: 10px;
+  line-height: 12px;
+  margin-top: 6px;
+  margin-bottom: 6px;
+  padding-left: 10px;
+  font-family: Roboto, sans-serif;
+}
+
+#welcomePopupList { 
+  font-size: 12px;
+  line-height: 15px;
+  margin-top: 6px;
+  margin-bottom: 6px;
+  padding-left: 15px;
+  font-family: Roboto, sans-serif;
+}
+
+/********************************************
+ * 2. CONTAINER FOR CONSOLES
+Adjustment for smaller screens
+ ********************************************/
+
+@media (max-width: 800px) {
+  #console_container {
+    display: flex;
+    flex-direction: column; /* stack vertically */
+    gap: 10px; /* optional spacing */
+  }
+
+  #console_left,
+  #console_right {
+    position: static !important; /* remove fixed/absolute positioning */
+    width: 70%;                 /* full width */
+    max-width: none;
+  }
+}
+
+/********************************************
+ * 3. TWO-CONSOLE LAYOUT (LEFT + RIGHT)
+ ********************************************/
+/*Position left console*/
+#console_left {
+  top: 10px;
+  left: 10px;
+  z-index: 2000;
+}
+
+/*Position right console*/
+#console_right {
+  top: 10px;
+  right: 10px;
+  z-index: 1000;
+}
+
+.console {
+  position: absolute;
+  width: 260px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(2px);
+  border-radius: 6px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+  padding: 12px 14px; /* restored */
+  z-index: 3;
+  font-family: Roboto, sans-serif;
+  overflow: hidden;
+}
+
+/* Header */
+.console-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-bottom: 2px;
+}
+
+/* Content animation */
+.console-content {
+  overflow: hidden;
+  max-height: 3000px; /* must be larger than content */
+  opacity: 1;
+  transition:
+    max-height 0.5s ease-in-out,
+    opacity 0.5s ease-in-out;
+}
+
+.console-collapsed .console-content {
+  max-height: 0;
+  opacity: 0;
+}
+
+/* Arrow button */
+.console-toggle {
+  background: rgba(255,255,255,0.9);
+  border: none;
+  font-size: 15px;
+  cursor: pointer;
+  padding: 0px 4px;
+  border-radius: 4px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+}
+
+/* Arrow rotation */
+.console .arrow {
+  display: inline-block;
+  transition: transform 0.3s ease;
+}
+
+.console-collapsed .arrow {
+  transform: rotate(180deg);
+}
+
+
+/********************************************
+ * 4. YEAR SLIDER (LEFT CONSOLE)
+ ********************************************/
+/*Width and margin of year slider container*/
+#yearSliderContainer {
+  width: 100%;
+  margin-top: 12px;
+}
+
+/*Width and margin around year slider*/
+#yearSlider {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/*remove build in padding for WebKit*/
+#yearSlider::-webkit-slider-runnable-track {
+  margin: 0;
+}
+
+/*remove build in padding for Firefox*/
+#yearSlider::-moz-range-track {
+  margin: 0;
+}
+
+/*Controls container for all ticks + labels*/
+#yearTicks {
+  display: flex; /*lays out tick labels in horizontal row*/
+  justify-content: space-between; /*spreads ticks evely across full width*/
+  margin-top: 2px; /*adds space between slide and tick labels*/
+  font-size: 10px;
+  color: #333;
+}
+
+/* Default tick label */
+#yearTicks span {
+  position: relative;
+  text-align: center;
+  font-weight: normal;
+  opacity: 0.6;
+  transition: all 0.2s ease;
+}
+
+/* Highlighted (selected) year */
+#yearTicks span.active {
+  font-weight: bold;
+  opacity: 1;
+  color: #252525; /* matches your dark green thumb */
+  transform: scale(1.1); /* optional: subtle pop */
+}
+
+/*Default tick mark: create vertical tick line above each year label*/
+#yearTicks span::before {
+  content: ""; /*required for pseudo-elements to render*/
+  position: absolute; /*allows precise placement relative to the parent*/
+  top: -10px; /*Moves the tick above the year text*/
+  left: 50%;
+  transform: translateX(-50%); /*with above: centers the tick horizontally over the label*/
+  width: 2px;
+  height: 6px;
+  background: #006d2c;
+}
+
+/* Optional: make the tick mark above the active year darker */
+#yearTicks span.active::before {
+  background: #00441b; /* deeper green */
+  height: 8px;         /* slightly taller tick */
+}
+
+/* Remove transparency from the whole slider */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  background: #fafafa; /* instead of transparent */
+  cursor: pointer;
+}
+
+/* Track */
+input[type="range"]::-moz-range-track,
+input[type="range"]::-webkit-slider-runnable-track {
+  height: 4px;
+  background: #74c476;
+  border-radius: 2px;
+}
+
+/* Thumb */
+input[type="range"]::-moz-range-thumb,
+input[type="range"]::-webkit-slider-thumb {
+  width: 14px;
+  height: 14px;
+  background: #006d2c;
+  border-radius: 50%;
+  background-clip: padding-box;
+}
+
+/********************************************
+ * 5. MAP LEGEND (LEFT CONSOLE)
+ ********************************************/
+/* ===== OVERALL BOX ==== */
+/* Style of box around map legend */
+#mapLegend.map-legend-box {
+  border: 1px solid #ccc;
+  padding: 12px 14px;
+  border-radius: 6px;
+  background: #fafafa;
+  margin-bottom: 14px;
+  font-size: 12px;
+  color: #333;
+}
+
+/* Style of legend title*/
+#mapLegend .legend-title {
+  font-weight: bold;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+/* Style of rows that hold top two legend entries*/
+#mapLegend .legend-row.simple {
+  display: grid;
+  grid-template-columns: 28px 1fr;
+  column-gap: 8px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+/* Each element in rows above to centre themselves inside cell*/
+#mapLegend .legend-swatch {
+  justify-self: center;
+}
+
+/* Appearance of legend symbol for municipal boundaries*/
+#mapLegend .legend-swatch.boundary {
+  width: 16px;
+  height: 16px;
+  border: 1.5px solid #000;
+  background: transparent;
+}
+
+/* ===== DENSITY LEGEND ==== */
+#mapLegend .legend-density-block {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* Each density class row */
+#mapLegend .density-row {
+  display: grid;
+  grid-template-columns: 28px 1fr; /* matches .legend-row.simple */
+  column-gap: 8px;
+  align-items: center;
+}
+
+/* Color swatch for density classes */
+#mapLegend .density-color {
+  width: 18px;
+  height: 18px;
+  border-radius: 3px;
+  justify-self: center; /* matches your existing swatch alignment */
+}
+
+* Container for boxes + boundary labels */
+#mapLegend .density-bar-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;        /* ⭐ stretch full width */
+  margin-top: 6px;
+}
+
+/* Density legend entry */
+#mapLegend .density-boxes {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);  /* ⭐ each box takes equal share */
+  width: 100%;
+  height: 20px;        /* ⭐ short rectangles */
+}
+
+#mapLegend .density-box {
+  border: 1.5px solid #000;
+  border-right-width: 0;
+}
+
+#mapLegend .density-box:last-child {
+  border-right-width: 2px;
+}
+
+/* Row of boundary labels */
+#mapLegend .density-boundaries {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  width: 100%;
+  margin-top: 4px;
+}
+
+/* Default: center labels */
+#mapLegend .density-boundary-label {
+  font-size: 11px;
+  color: #333;
+  text-align: center;
+  transform: translateX(-50%);
+}
+
+/* ===== AVERAGE COW LEGEND ==== */
+/*styles entire circle scale section containing   label and row of circles - outer container*/
+#mapLegend .legend-circles {
+  margin-top: 10px; /*space above whole section*/
+  display: flex;
+  flex-direction: column; /*create vertical stack*/
+  align-items: flex-start; /*align to the left*/
+}
+
+/*styles the row of circles: controls how far below the label the circles sit + spacing*/
+#mapLegend .circle-scale {
+  display: flex; /*lays circles horizontally*/
+  gap: 16px; /*horizontal spacing btw circles*/
+  margin-top: 6px; /*spacing abov row*/
+}
+
+/*styles layout of each circle and number pair*/
+#mapLegend .circle-item {
+  display: flex;
+  flex-direction: column; /*stacks circle and number vertically*/
+  align-items: center; /*centres them horizontally*/
+}
+
+/* Appearance of legend circles for average cow number*/
+#mapLegend .circle {
+  display: inline-block;
+  border: 1px solid #252525;
+  background: #00441b;
+  border-radius: 50%;
+}
+
+/*sets size of each circle*/
+#mapLegend .circle.c50 { width: 8px;
+  height: 8px; }
+#mapLegend .circle.c100 { width: 16px;
+  height: 16px; }
+#mapLegend .circle.c150 { width: 24px;
+  height: 24px; }
+#mapLegend .circle.c200 {width: 32px;
+  height: 32px; }
+
+/*set style of number text belonging to each circle*/
+#mapLegend .circle-number {
+  font-size: 10px;
+  margin-top: 2px;
+  color: #333;
+}
+
+/********************************************
+ * 6. RADIO TOGGLE (LEFT CONSOLE)
+ ********************************************/
+#density-mode-container,
+#density-toggle {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  justify-content: center
+}
+
+.density-mode-box {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
+  width: 80px;
+  height: 40px;
+  border: 1.5px solid #ccc;
+  border-radius: 6px;
+  background: #fafafa;
+  cursor: pointer;
+
+  text-align: center;
+  line-height: 1.1;
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
+}
+
+/* Hide the actual radio input */
+.density-mode-box input[type="radio"] {
+  display: none;
+}
+
+/* Two-line text */
+.density-mode-text span:first-child {
+  font-weight: bold;
+  font-size: 13px;
+}
+
+.density-mode-text span:last-child {
+  font-size: 11px;
+  color: #555;
+}
+
+/* Selected state (Chrome/Edge/Safari) */
+.density-mode-box:has(input[type="radio"]:checked) {
+  background: #006d2c; /*dark green*/
+  border-color: #000;
+  color: white;
+}
+
+.density-mode-box:has(input[type="radio"]:checked) .density-mode-text span:last-child {
+  color: white;
+}
+
+/********************************************
+ * 7. MINI-CHART (both)
+ ********************************************/
+
+/*space above whole minichart area to text*/
+[id^="mini-chart"] {
+  margin-top: 6px;
+  min-height: 120px;
+}
+
+/*control layout for sparkline chart*/
+[id^="mini-chart"] svg {
+  display: block; /*forces SVG to behave like a normal box-level element - not diplay:inline*/
+  width: 100%; /*fill full with of parent container #mini-chart*/
+  height: auto; /*keep aspect ratio intact*/
+}
+
+/*controls appearance and style of chart legend*/
+.legend {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  align-items: center;
+  font-size: 11px;
+  color: #333;
+  margin-top: 0px;
+  margin-bottom: 4px;
+}
+
+/*sets size of chart legend symbols (lines)*/
+.legend .swatch {
+  width: 18px;
+  height: 3px;
+  border-radius: 2px;
+}
+
+/*set colours for individual lines representing cows or farms*/
+.legend .swatch.cows { background: #41ab5d; }
+.legend .swatch.farms { background: #00441b; }
+
+/********************************************
+ * 8. ACCORDION (RIGHT CONSOLE)
+   - .accordion-item: styles the outer container box
+   - .accordion-header: clickable row with text + arrow
+   - .accordion-arrow: rotates on open/close
+   - .accordion-content: collapsible panel using max-height
+   - .accordion-content.open: adds padding when expanded
+   These classes work together to create a smooth,
+   modern accordion with animated expansion.
+
+ ********************************************/
+
+/*styles container for each accodion section*/
+.accordion-item {
+  border: 1px solid #ccc; /*light grey outline*/
+  border-radius: 6px; /*softens the corners*/
+  background: #fafafa; /*light grey*/
+  margin-bottom: 10px; /*spacing between items*/
+  transition: background-color 0.5s ease;
+}
+
+.accordion-item.open {
+  background: #f7fcf5; /* soft light green */
+}
+
+/*styles clickable title bar*/
+.accordion-header {
+  padding: 6px 6px;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer; /*shows hand cursor to signal interactivity*/
+  display: flex; /*allows text and arrow to sit on one line*/
+  justify-content: space-between; /*pushes arrow to far right*/
+  align-items: center; /*vertically centers arrow and text*/
+  user-select: none; /*prevents accidental textselection when clicking*/
+}
+
+/*controls arrow and smooth animated rotation: JS toggles - transform: rotate(180deg) when open and - transform: rotate(0deg) when closed*/
+.accordion-arrow {
+  transition: transform 0.5s ease;
+}
+
+/*controls collapsible panel when closed and animation to open/close: the accordion content is invisible and takes up no space when closed.*/
+.accordion-content {
+  max-height: 0; /*collapses the content when closed*/
+  overflow: hidden; /*prevents content from spilling out*/
+  transition: max-height 0.5s ease; /*animates opening/closing smoothly*/
+  padding: 0 10px; /* horizontal only */
+}
+
+/*controls collapsible panel when open: Combined with JS setting max-height to the scroll height, the panel becomes visible */
+.accordion-content.open {
+  padding-top: 0px; /*padding expands to 10px on all sides*/
+  padding-bottom: 0px;
+}
+
+/********************************************
+ * 9. HOVER POP UP
+ ********************************************/
+
+/*Reset default styling for pop-ups*/
+.mapboxgl-popup-content {
+  background: transparent !important;
+  padding: 0 !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/*Style pop up window for municipality names*/
+.hover-label {
+  font-size: 12px;
+  font-weight: bold;
+  padding: 3px 6px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 4px;
+  color: #000;
+}
+
+/********************************************
+ * 9. WELCOME POP-UP
+ ********************************************/
+.popup-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  display: none; /* hidden by default */
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.popup-window {
+  background: white;
+  padding: 20px 24px;
+  border-radius: 8px;
+  max-width: 420px;
+  width: 90%;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+}
+
+#closePopup {
+  margin-top: 15px;
+  padding: 8px 14px;
+  background: #2a7f3f;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+/********************************************
+ * 11. GEOCODER
+ ********************************************/
+
+/* ----- position controls ----- */
+
+/* Make controls in the bottom-right sit next to each other */
+.mapboxgl-ctrl-bottom-right {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center;
+  gap: 8px; /* space between geocoder and nav buttons */
+}
+
+/* Lift the entire bottom-right control group upward */
+.mapboxgl-ctrl-bottom-right {
+  bottom: 30px; /* adjust to taste */
+}
+
+/* Prevent controls from shrinking */
+.mapboxgl-ctrl-bottom-right .mapboxgl-ctrl {
+  flex-shrink: 0;
+}
+
+/* Keep attribution anchored in the corner, not in the flex row */
+.mapboxgl-ctrl-bottom-right .mapboxgl-ctrl-attrib {
+  position: absolute !important;
+  right: 0;
+  bottom: 0;
+  margin: 0 4px 4px 0; /* small padding from edges */
+  z-index: 5;
+}
+
+/* ----- geocoder search bar ----- */
+/* Remove Mapbox's built‑in width limit on controls */
+.mapboxgl-ctrl-bottom-right .mapboxgl-ctrl {
+  max-width: none !important;
+}
+
+/*Match colour palette*/
+.mapboxgl-ctrl-geocoder {
+  width: 250px !important;
+  max-width: 250px !important;
+  font-family: inherit;
+  border-radius: 6px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  background: #fff;
+}
+
+.mapboxgl-ctrl-geocoder input[type="text"] {
+  font-size: 14px;
+  padding: 0px 0px 0px 30px !important;
+  width: 100%;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.mapboxgl-ctrl-geocoder input[type="text"]:focus {
+  border-color: #0078ff;
+}
+
+ /*Style dropdown list*/
+.mapboxgl-ctrl-geocoder .suggestions {
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: 0 4px 4px rgba(0,0,0,0.15);
+}
+
+.mapboxgl-ctrl-geocoder .suggestions > li {
+  padding: 8px 8px;
+  font-size: 10px;
+  cursor: pointer;
+}
+
+.mapboxgl-ctrl-geocoder .suggestions > li:hover {
+  background: #f0f4ff;
+}
+
+/* Make the search icon match the UI tone*/
+.mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--icon-search {
+  fill: #666;
+}
+
+/*Make the clear‑button match the UI*/
+.mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--button {
+  color: #666;
+  transition: color 0.2s ease;
+}
+
+.mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--button:hover {
+  color: #000;
+}
+
+/*Add a subtle hover/active effect to match the accordion headers*/
+.mapboxgl-ctrl-geocoder:hover {
+  box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+}
+
+/*formatting for geocoder message about search outside polygon*/
+.map-message {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #333;
+  color: white;
+  padding: 10px 16px;
+  border-radius: 4px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+  z-index: 9999;
+}
+
+.map-message.visible {
+  opacity: 0.9;
+}
