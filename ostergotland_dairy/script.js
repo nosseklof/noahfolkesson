@@ -1353,6 +1353,9 @@ function selectMunicipalityFromGeocoder(knkod) {
                                      ["get", "KnKod"],
                                      selectedKnKod]);
   }
+   if (map.getLayer("areas-selected-glow")) {
+    map.setFilter("areas-selected-glow", ["==", ["get", "KnKod"], selectedKnKod]);
+  }
   
   const bounds = turf.bbox(
     enriched.features.find(f => f.properties.KnKod === knkod)
