@@ -1166,21 +1166,6 @@ function handleMiniChartEvent(event) {
   
   const geom = activeMiniGeom;
   if (!geom) return;
-  
-  // --- DEBUG: which geometry is active ---
-  console.log(
-    "Active geom target:",
-    geom === window.miniGeom ? "miniGeom" :
-    geom === window.countyMiniGeom ? "countyMiniGeom" :
-    "UNKNOWN"
-  );
-
-  // --- DEBUG: bounding box of the interaction layer ---
-  const rect = geom.interaction.getBoundingClientRect();
-  console.log("rect.width:", rect.width, "rect.left:", rect.left);
-
-  // --- DEBUG: click position ---
-  console.log("event.clientX:", event.clientX);
 
   // Use the SVG’s bounding box, not the rect’s width
   const svgRect = geom.svg.getBoundingClientRect();
