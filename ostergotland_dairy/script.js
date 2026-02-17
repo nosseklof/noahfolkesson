@@ -1073,7 +1073,6 @@ document.addEventListener("click", (e) => {
       e.target.closest(".accordion-section")) {
     return;
   }
-  closeAccordion();
 });
 
 // -- YEAR SLIDER -- //
